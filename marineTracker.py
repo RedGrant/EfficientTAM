@@ -47,15 +47,62 @@ inference_state = predictor.init_state(video_path=video_path, offload_video_to_c
 points = np.array([[W//2, H//2]], dtype=np.float32)  # center pixel
 labels = np.array([1], np.int32)
 
-predictor.add_new_points_or_box(
-    inference_state=inference_state,
-    frame_idx=0,
-    obj_id=0,
-    points=points,
-    labels=labels,
-)
+#predictor.add_new_points_or_box(
+#    inference_state=inference_state,
+#    frame_idx=0,
+#    obj_id=0,
+#    points=points,
+#    labels=labels,
+#)
+#print("Initialized dummy click at video center.")
 
-print("Initialized dummy click at video center.")
+frame_idx = 7  # YOLO detections come from frame 7
+annotation_path = ("/media/pedroguedes/UBUNTU_SSD/PHD/Thesis/Software/Tracking/yolov8_model/"
+                   "video_annotations/Fish_net_1200/7_Fish_net_1200.txt")  # <-- change this!
+
+if not os.path.exists(annotation_path):
+    raise FileNotFoundError(f"Annotation file not found: {annotation_path}")
+
+# Read YOLO annotation lines for frame 7
+with open(annotation_path, "r") as f:
+    lines = [l.strip() for l in f.readlines() if l.strip()]
+
+print(f"Loaded {len(lines)} detections from {annotation_path}")
+
+for line in lines:
+    # Expected YOLO format: class x_center y_center width height track_id
+    parts = line.split()
+    if len(parts) < 6:
+        print(f"Skipping malformed line: {line}")
+        continue
+
+    cls, xc, yc, w_box, h_box, track_id = map(float, parts)
+
+    # Convert normalized [0,1] → pixel coordinates
+    xc_pix = xc * W
+    yc_pix = yc * H
+    w_pix = w_box * W
+    h_pix = h_box * H
+
+    # Use center point of box as click input
+    points = np.array([[xc_pix, yc_pix]], dtype=np.float32)
+    labels = np.array([1], np.int32)
+
+    # Add this object to EfficientTAM for tracking
+    predictor.add_new_points_or_box(
+        inference_state=inference_state,
+        frame_idx=frame_idx,
+        obj_id=int(track_id),  # use YOLO track_id to keep consistency
+        points=points,
+        labels=labels,
+    )
+
+    print(f"✅ Added object {int(track_id)} from frame {frame_idx}: "
+          f"class={int(cls)}, center=({xc_pix:.1f},{yc_pix:.1f}), "
+          f"size=({w_pix:.1f},{h_pix:.1f})")
+
+print(f"Initialized from YOLO boxes on frame {frame_idx}.")
+
 
 # -----------------------------
 # RUN PROPAGATION
