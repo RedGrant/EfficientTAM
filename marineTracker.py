@@ -7,7 +7,8 @@ from efficient_track_anything.build_efficienttam import build_efficienttam_video
 # -----------------------------
 # CONFIGURATION
 # -----------------------------
-video_path = "/media/pedroguedes/UBUNTU_SSD/PHD/Thesis/Software/Tracking/yolov8_model/input_videos/adaptive_gaussian_11_opening_KNN/Fish_net_1200.mp4"
+video_path = ("/media/pedroguedes/UBUNTU_SSD/PHD/Thesis/Software/Tracking/yolov8_model/input_videos/"
+              "adaptive_gaussian_11_opening_KNN/Fish_net_1200.mp4")
 checkpoint = "../checkpoints/efficienttam_ti.pt"   # use FP32 version if converted
 model_cfg = "configs/efficienttam/efficienttam_ti.yaml"
 output_dir = "./outputs_test"
